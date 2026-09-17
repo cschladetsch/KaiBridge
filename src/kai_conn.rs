@@ -77,13 +77,25 @@ async fn handle_connection(
                         let line = line.trim().to_string();
                         if line.is_empty() { continue; }
 
+                        // Ignore greeting/status lines from WebConsole
+                        if line.starts_with("READY") { continue; }
+
                         if let Some(frame) = parse_sup(&line) {
                             let _ = sup_tx.send(frame);
                         } else if let Some((src, reply_tx)) = pending.take() {
-                            let frame = ServerFrame::Result {
-                                src,
-                                output: line,
-                                ts: now_ms(),
+                            // WebConsole prefixes responses with RESULT/ERROR
+                            let (is_error, output) = if let Some(rest) = line.strip_prefix("RESULT ") {
+                                (false, rest.to_string())
+                            } else if let Some(rest) = line.strip_prefix("ERROR ") {
+                                (true, rest.to_string())
+                            } else {
+                                (false, line.clone())
+                            };
+
+                            let frame = if is_error {
+                                ServerFrame::Error { msg: output, ts: now_ms() }
+                            } else {
+                                ServerFrame::Result { src, output, ts: now_ms() }
                             };
                             let _ = reply_tx.send(frame).await;
                         } else {

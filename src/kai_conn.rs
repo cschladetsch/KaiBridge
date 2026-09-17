@@ -117,7 +117,7 @@ async fn handle_connection(
 }
 
 /// Parse `SUP node:reg:# <json>` into a ServerFrame::Sup.
-fn parse_sup(line: &str) -> Option<ServerFrame> {
+pub(crate) fn parse_sup(line: &str) -> Option<ServerFrame> {
     let rest = line.strip_prefix("SUP ")?;
     let (addr, json_str) = rest.split_once(' ')?;
     let state: Value = serde_json::from_str(json_str).ok()?;

@@ -2,6 +2,14 @@ mod kai_conn;
 mod protocol;
 mod ws_handler;
 
+#[cfg(test)]
+mod tests {
+    mod test_parse_sup;
+    mod test_protocol;
+    mod test_kai_conn;
+    mod test_ws_handler;
+}
+
 use std::net::SocketAddr;
 
 use clap::Parser;
